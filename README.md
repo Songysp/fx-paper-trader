@@ -1,101 +1,54 @@
 # FX Paper Trader
 
-IBKR(Interactive Brokers) FX paper trading example project입니다.
-
-기존 `fx_trading.py` 한 파일에 있던 기능을 책임별로 나누어, Python 초보자도 읽고 수정하기 쉬운 구조로 리팩토링했습니다.
+IBKR(Interactive Brokers) FX paper trading 예제 프로젝트입니다.  
+기존 단일 파일 코드를 유지보수하기 쉬운 구조로 나누고, 초보자도 읽기 쉽게 정리한 버전입니다.
 
 ## 주요 기능
 
 - IBKR paper trading 연결
 - 실시간 tick 데이터 수신
-- tick 데이터를 1분봉 OHLC로 집계
-- MA(Moving Average) crossover 전략
+- tick -> 1분봉 OHLC 집계
+- MA crossover 전략
+- RSI 필터, MA gap 필터
 - `orderStatus` 와 `execDetails` 분리 처리
 - 체결 기준 포지션 업데이트
-- stop loss / take profit / max daily loss 적용
-- CSV 로그 저장
-- `.env` 기반 설정 관리
-
-
-## Recent Improvements
-
-- safer pending_order release
-- no trading decision on shutdown flush
-- CSV header safety
-- weighted-average entry price for partial fills
-
-## 폴더 구조
-
-```text
-fx-paper-trader/
-├─ README.md
-├─ requirements.txt
-├─ .env.example
-├─ main.py
-├─ config/
-│  ├─ __init__.py
-│  └─ settings.py
-├─ brokers/
-│  ├─ __init__.py
-│  └─ ibkr_client.py
-├─ data/
-│  ├─ __init__.py
-│  ├─ tick_buffer.py
-│  └─ bar_aggregator.py
-├─ strategies/
-│  ├─ __init__.py
-│  ├─ base.py
-│  └─ ma_crossover.py
-├─ risk/
-│  ├─ __init__.py
-│  └─ risk_manager.py
-├─ execution/
-│  ├─ __init__.py
-│  ├─ order_factory.py
-│  └─ position_manager.py
-├─ logging_system/
-│  ├─ __init__.py
-│  └─ csv_logger.py
-├─ models/
-│  ├─ __init__.py
-│  └─ state.py
-├─ utils/
-│  ├─ __init__.py
-│  └─ time_utils.py
-└─ logs/
-   └─ trading_log.csv
-```
+- stop loss / take profit / max daily loss
+- CSV 로깅
+- `pytest` 테스트 포함
 
 ## 빠른 시작
 
 ### 1. 가상환경 생성
 
-Windows PowerShell:
-
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1
 ```
 
-### 2. 패키지 설치
+### 2. 가상환경 활성화
 
 ```powershell
-pip install -r requirements.txt
+.\.venv\Scripts\Activate.ps1
 ```
 
-### 3. 환경 변수 파일 준비
+PowerShell 실행 정책 오류가 나면:
 
-`.env.example` 을 참고해서 `.env` 파일을 만듭니다.
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+```
+
+### 3. 패키지 설치
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### 4. 환경 파일 준비
 
 ```powershell
 Copy-Item .env.example .env
 ```
-
-### 4. IBKR 설정 확인
-
-- TWS 또는 IB Gateway 를 paper trading 계정으로 실행합니다.
-- API 설정에서 socket 연결을 허용합니다.
-- 기본 paper trading 포트는 보통 `7497` 입니다.
 
 ### 5. 실행
 
@@ -103,101 +56,139 @@ Copy-Item .env.example .env
 python main.py
 ```
 
-## 실행 흐름
+## `.env` 설명
 
-`main.py` 의 흐름은 다음 순서입니다.
+### 브로커 연결
 
-1. 설정 로드
-2. CSV 로거 생성
-3. 전략, 리스크, 포지션 관리자 생성
-4. IBKR 클라이언트 연결
-5. 실시간 tick 수신
-6. tick -> 1분봉 집계
-7. 새 1분봉 완성 시 리스크 검사
-8. 리스크 문제가 없으면 전략 시그널 계산
-9. 주문 전송
-10. 실제 체결(`execDetails`) 후 포지션 반영
+- `IBKR_HOST`
+  - IBKR TWS 또는 IB Gateway 주소
+  - 보통 `127.0.0.1`
+- `IBKR_PORT`
+  - TWS API 포트
+  - paper 계정은 보통 `7497`
+- `IBKR_CLIENT_ID`
+  - API 클라이언트 구분용 번호
+- `IBKR_CONNECT_TIMEOUT`
+  - 연결 대기 시간(초)
+- `IBAPI_PATH`
+  - 공식 IBKR Python API 경로
+  - 예: `C:\TWS API\source\pythonclient`
 
-## 주요 클래스 설명
+### 상품 설정
 
-### `config/settings.py`
+- `FX_SYMBOL`
+  - 기준 통화
+  - 예: `EUR`
+- `FX_CURRENCY`
+  - 상대 통화
+  - 예: `USD`
+- `FX_EXCHANGE`
+  - 보통 `IDEALPRO`
+- `MARKET_DATA_REQ_ID`
+  - 시장 데이터 요청 ID
 
-- 환경설정과 전략설정, 리스크설정을 dataclass 로 관리합니다.
+### 전략 설정
 
-### `brokers/ibkr_client.py`
+- `SHORT_WINDOW`
+  - 단기 이동평균 기간
+- `LONG_WINDOW`
+  - 장기 이동평균 기간
+- `DEFAULT_ORDER_QTY`
+  - 기본 주문 수량
 
-- IBKR API 와 직접 통신하는 클래스입니다.
-- 연결, 실시간 tick, 주문 상태, 체결 이벤트를 처리합니다.
+### 필터 설정
 
-### `data/tick_buffer.py`
+- `ENABLE_RSI_FILTER`
+  - `true` 면 RSI 필터 사용
+- `RSI_PERIOD`
+  - RSI 계산 기간
+- `RSI_BUY_MAX`
+  - RSI가 이 값보다 높으면 매수 보류
+- `ENABLE_MA_GAP_FILTER`
+  - `true` 면 MA 간격 필터 사용
+- `MIN_MA_GAP_PCT`
+  - 단기/장기 MA 차이가 이 값보다 작으면 매수 보류
 
-- 최근 tick 데이터를 메모리에 저장합니다.
+### 로그 설정
 
-### `data/bar_aggregator.py`
+- `PRINT_TICKS`
+  - 콘솔에 tick을 한 줄씩 출력할지 여부
+  - 너무 많아서 기본값은 `false`
+- `LOG_TICKS`
+  - CSV에 tick을 저장할지 여부
+  - 분석이 어려워질 수 있어 기본값은 `false`
+- `PRINT_FILTER_REASONS`
+  - 봉이 완성될 때 전략 판단 이유를 콘솔에 출력
+- `LOG_SYSTEM_MESSAGES`
+  - CSV에 연결/시작/종료 같은 시스템 로그를 남길지 여부
+- `LOG_RISK_CHECKS`
+  - CSV에 매 봉마다 리스크 점검 로그를 남길지 여부
 
-- 들어오는 tick 을 1분봉 OHLC 로 묶습니다.
+### 리스크 설정
 
-### `strategies/base.py`
+- `STOP_LOSS_PCT`
+  - 손절 비율
+- `TAKE_PROFIT_PCT`
+  - 익절 비율
+- `MAX_DAILY_LOSS`
+  - 하루 최대 손실 한도
 
-- 새로운 전략을 추가할 때 따라야 하는 인터페이스입니다.
+### 파일 경로
 
-### `strategies/ma_crossover.py`
+- `LOG_FILE`
+  - CSV 로그 파일 위치
 
-- 종가 목록으로 단기/장기 이동평균을 계산해 `BUY`, `SELL`, `HOLD` 시그널을 냅니다.
+## 현재 매수/매도 조건
 
-### `risk/risk_manager.py`
+### 매수
 
-- 일일 손실 한도, stop loss, take profit 을 검사합니다.
+아래 조건을 모두 만족해야 합니다.
 
-### `execution/order_factory.py`
+1. `MA 5 > MA 20`
+2. RSI 필터 사용 시 `RSI <= RSI_BUY_MAX`
+3. MA gap 필터 사용 시 단기/장기 MA 차이가 최소 기준 이상
+4. 현재 포지션 없음
+5. 대기 중 주문 없음
+6. 일일 손실 한도 초과 아님
 
-- IBKR 주문 객체를 생성하기 전의 주문 요청을 만듭니다.
+### 매도
 
-### `execution/position_manager.py`
+- `MA 5 <= MA 20` 이면 청산
+- 또는 stop loss / take profit 이 먼저 걸리면 리스크 규칙으로 청산
 
-- 실제 체결 정보를 기준으로 포지션 상태와 실현 손익을 갱신합니다.
+## 콘솔 로그가 너무 많을 때
 
-### `logging_system/csv_logger.py`
+현재는 아래처럼 설정하면 tick 로그가 거의 사라집니다.
 
-- 로그 파일과 `logs/` 디렉토리를 자동 생성하고 CSV 로 기록합니다.
-
-### `models/state.py`
-
-- Tick, Bar, PositionState, TradeState 등 공통 dataclass 를 정의합니다.
-
-## RSI 같은 새 전략 추가 방법
-
-1. `strategies/` 아래에 새 파일을 추가합니다.
-2. `BaseStrategy` 를 상속받아 `generate_signal()` 을 구현합니다.
-3. `main.py` 에서 사용할 전략 클래스를 바꿉니다.
-
-예를 들어:
-
-```python
-from strategies.rsi_strategy import RSIStrategy
-
-strategy = RSIStrategy(period=14, oversold=30, overbought=70)
+```env
+PRINT_TICKS=false
+LOG_TICKS=false
+PRINT_FILTER_REASONS=true
+LOG_SYSTEM_MESSAGES=false
+LOG_RISK_CHECKS=false
 ```
 
-## 주의사항
+이렇게 하면 주로 아래 로그만 보게 됩니다.
 
-- 이 프로젝트는 paper trading 용 예제입니다.
-- 실제 계좌에 사용하기 전에 충분한 테스트가 필요합니다.
-- 주문 상태(`orderStatus`)와 체결(`execDetails`)은 다릅니다.
-- 포지션은 반드시 체결 후에만 바뀌도록 구현되어 있습니다.
-- stop loss / take profit 은 현재 예제에서는 새 1분봉이 완성될 때 검사합니다.
-- 환율 상품의 최소 주문 단위와 거래 가능 시간은 IBKR 설정을 확인해야 합니다.
+- 연결 로그
+- 1분봉 로그
+- 전략 판단 로그
+- 주문 로그
+- 체결 로그
 
-## 추천 학습 순서
+## 10285 오류가 날 때
 
-초보자라면 아래 순서로 읽으면 이해가 쉽습니다.
+아래 오류가 나오면:
 
-1. `main.py`
-2. `models/state.py`
-3. `config/settings.py`
-4. `brokers/ibkr_client.py`
-5. `data/bar_aggregator.py`
-6. `strategies/ma_crossover.py`
-7. `risk/risk_manager.py`
-8. `execution/position_manager.py`
-9. `logging_system/csv_logger.py`
+```text
+code=10285, msg=Your API version does not support fractional size rules
+```
+
+대부분 `pip install ibapi` 로 설치된 오래된 패키지가 먼저 import 되는 경우입니다.  
+`.env` 의 `IBAPI_PATH` 에 공식 API 경로를 지정하는 방법을 권장합니다.
+
+## 테스트 실행
+
+```powershell
+python -m pytest tests
+```

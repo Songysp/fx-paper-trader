@@ -23,12 +23,21 @@ class TradingApplication:
     def __init__(self) -> None:
         """Create every object the application needs."""
         self.settings = AppSettings.load()
-        self.logger = CSVTradeLogger(self.settings.logging.log_file)
+        self.logger = CSVTradeLogger(
+            self.settings.logging.log_file,
+            log_system_messages=self.settings.logging.log_system_messages,
+            log_risk_checks=self.settings.logging.log_risk_checks,
+        )
         self.tick_buffer = TickBuffer(max_size=1000)
         self.bar_aggregator = BarAggregator()
         self.strategy = MovingAverageCrossoverStrategy(
             short_window=self.settings.strategy.short_window,
             long_window=self.settings.strategy.long_window,
+            enable_rsi_filter=self.settings.strategy.enable_rsi_filter,
+            rsi_period=self.settings.strategy.rsi_period,
+            rsi_buy_max=self.settings.strategy.rsi_buy_max,
+            enable_ma_gap_filter=self.settings.strategy.enable_ma_gap_filter,
+            min_ma_gap_pct=self.settings.strategy.min_ma_gap_pct,
         )
         self.risk_manager = RiskManager(self.settings.risk)
         self.position_manager = PositionManager()
@@ -56,6 +65,18 @@ class TradingApplication:
         print(f"Short MA            : {self.settings.strategy.short_window}")
         print(f"Long MA             : {self.settings.strategy.long_window}")
         print(f"Default Order Qty   : {self.settings.strategy.default_order_qty}")
+        print(
+            f"RSI Filter          : {self.settings.strategy.enable_rsi_filter} "
+            f"(period={self.settings.strategy.rsi_period}, buy_max={self.settings.strategy.rsi_buy_max})"
+        )
+        print(
+            f"MA Gap Filter       : {self.settings.strategy.enable_ma_gap_filter} "
+            f"(min_gap={self.settings.strategy.min_ma_gap_pct:.4%})"
+        )
+        print(f"Print Ticks          : {self.settings.logging.print_ticks}")
+        print(f"Log Ticks to CSV     : {self.settings.logging.log_ticks}")
+        print(f"Log System Messages  : {self.settings.logging.log_system_messages}")
+        print(f"Log Risk Checks      : {self.settings.logging.log_risk_checks}")
         print(f"Stop Loss           : {self.settings.risk.stop_loss_pct:.2%}")
         print(f"Take Profit         : {self.settings.risk.take_profit_pct:.2%}")
         print(f"Max Daily Loss      : {self.settings.risk.max_daily_loss}")
@@ -97,8 +118,10 @@ class TradingApplication:
     def handle_tick(self, tick: Tick) -> None:
         """Store tick data and convert ticks into 1-minute bars."""
         self.tick_buffer.add_tick(tick)
-        self.logger.log_tick(price=tick.price, tick_type=tick.tick_type)
-        print(f"[TICK] time={tick.timestamp.strftime('%H:%M:%S')} price={tick.price}")
+        if self.settings.logging.log_ticks:
+            self.logger.log_tick(price=tick.price, tick_type=tick.tick_type)
+        if self.settings.logging.print_ticks:
+            print(f"[TICK] time={tick.timestamp.strftime('%H:%M:%S')} price={tick.price}")
 
         completed_bar = self.bar_aggregator.update(tick)
         if completed_bar is not None:
@@ -139,12 +162,13 @@ class TradingApplication:
             self.submit_order("SELL", self.position_state.quantity)
             return
 
-        signal = self.strategy.generate_signal(
-            close_prices=close_prices,
-            position=self.position_state,
-        )
-
-        short_ma, long_ma = self.strategy.get_latest_indicator_values(close_prices)
+        signal_details = self.strategy.evaluate_signal_details(close_prices)
+        signal = str(signal_details["signal"])
+        short_ma = signal_details["short_ma"]
+        long_ma = signal_details["long_ma"]
+        rsi_value = signal_details["rsi"]
+        reason = str(signal_details["reason"])
+        rsi_text = f"{rsi_value:.2f}" if rsi_value is not None else "None"
         self.logger.log_signal(
             price=bar.close,
             signal=signal,
@@ -160,10 +184,12 @@ class TradingApplication:
         print(
             f"[BAR STRATEGY] price={bar.close:.4f}, "
             f"short_ma={short_ma:.4f}, long_ma={long_ma:.4f}, "
-            f"signal={signal}, current_position={self.position_state.side}, "
+            f"rsi={rsi_text}, signal={signal}, current_position={self.position_state.side}, "
             f"pending_order={self.client.trade_state.pending_order}, "
             f"daily_realized_pnl={self.risk_manager.daily_realized_pnl:.2f}"
         )
+        if self.settings.logging.print_filter_reasons:
+            print(f"[STRATEGY REASON] {reason}")
 
         if signal == "BUY" and not self.position_state.is_long and not self.risk_manager.trading_halted:
             print("[ACTION] BUY condition met")

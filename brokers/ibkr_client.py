@@ -2,9 +2,48 @@
 
 from __future__ import annotations
 
+import os
+import sys
 import threading
 import time
 from typing import Callable, Optional
+
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
+def _prefer_official_ibapi_package() -> None:
+    """Prepend the official IBKR Python API path to ``sys.path`` when available."""
+    candidate_paths = []
+
+    env_path = os.getenv("IBAPI_PATH")
+    if env_path:
+        candidate_paths.append(env_path)
+
+    candidate_paths.extend(
+        [
+            r"C:\TWS API\source\pythonclient",
+            r"C:\TWS API\source\pythonclient\dist",
+            r"C:\IBKR API\source\pythonclient",
+            r"C:\IBKR API\source\pythonclient\dist",
+            r"C:\Jts\source\pythonclient",
+            r"C:\Jts\source\pythonclient\dist",
+        ]
+    )
+
+    for candidate in candidate_paths:
+        if not candidate:
+            continue
+
+        ibapi_package_dir = os.path.join(candidate, "ibapi")
+        if os.path.isdir(ibapi_package_dir) and candidate not in sys.path:
+            sys.path.insert(0, candidate)
+            return
+
+
+_prefer_official_ibapi_package()
 
 from ibapi.client import EClient
 from ibapi.contract import Contract
@@ -17,6 +56,8 @@ from models.state import ExecutionReport, OrderRequest, OrderStatusEvent, Tick, 
 
 class IBKRClient(EWrapper, EClient):
     """Thin wrapper around the IBKR API with simple Python callbacks."""
+
+    INFO_MESSAGE_CODES = {2104, 2106, 2107, 2108, 2158}
 
     def __init__(self, settings: BrokerSettings, logger) -> None:
         """Initialize broker settings, runtime state, and callback holders."""
@@ -119,10 +160,54 @@ class IBKRClient(EWrapper, EClient):
         print(f"[INFO] Connected. Next valid order id: {orderId}")
         self.logger.log_system(f"Connected. next_order_id={orderId}")
 
-    def error(self, reqId, errorCode, errorString, advancedOrderRejectJson="") -> None:
-        """Handle IBKR API errors."""
-        print(f"[ERROR] reqId={reqId}, code={errorCode}, msg={errorString}")
-        self.logger.log_error(f"reqId={reqId}, code={errorCode}, msg={errorString}")
+    def error(self, reqId, *args) -> None:
+        """Handle IBKR API errors from both old and new IBKR API signatures.
+
+        Older versions call:
+        - error(reqId, errorCode, errorString, advancedOrderRejectJson="")
+
+        Newer versions may call:
+        - error(reqId, errorTime, errorCode, errorString, advancedOrderRejectJson="")
+        """
+        error_time = None
+        advanced_order_reject_json = ""
+
+        if len(args) == 2:
+            errorCode, errorString = args
+        elif len(args) == 3:
+            errorCode, errorString, advanced_order_reject_json = args
+        elif len(args) == 4:
+            error_time, errorCode, errorString, advanced_order_reject_json = args
+        else:
+            print(f"[ERROR] Unexpected IBKR error callback args: reqId={reqId}, args={args}")
+            self.logger.log_error(f"Unexpected IBKR error callback args: reqId={reqId}, args={args}")
+            return
+
+        time_text = f", time={error_time}" if error_time is not None else ""
+        reject_text = (
+            f", advancedOrderRejectJson={advanced_order_reject_json}"
+            if advanced_order_reject_json
+            else ""
+        )
+        message = f"reqId={reqId}{time_text}, code={errorCode}, msg={errorString}{reject_text}"
+
+        if errorCode in self.INFO_MESSAGE_CODES:
+            print(f"[INFO] {message}")
+            self.logger.log_system(message)
+            return
+
+        if errorCode == 10285:
+            print(
+                "[ERROR] "
+                f"{message}. Your installed IB API client is older than the TWS/IB Gateway requirement."
+            )
+            self.logger.log_error(
+                f"{message}. Upgrade to the latest official IBKR Python API package."
+            )
+            return
+
+        print(f"[ERROR] {message}")
+        self.logger.log_error(message)
 
         if errorCode in {502, 504, 1100} and not self.trade_state.connected_ok:
             self._connected_event.set()

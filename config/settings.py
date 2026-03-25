@@ -29,6 +29,11 @@ class StrategySettings:
     short_window: int = 5
     long_window: int = 20
     default_order_qty: float = 1000
+    enable_rsi_filter: bool = True
+    rsi_period: int = 14
+    rsi_buy_max: float = 65.0
+    enable_ma_gap_filter: bool = True
+    min_ma_gap_pct: float = 0.00005
 
 
 @dataclass
@@ -45,6 +50,11 @@ class LoggingSettings:
     """Settings related to CSV logging."""
 
     log_file: str = "logs/trading_log.csv"
+    print_ticks: bool = False
+    log_ticks: bool = False
+    print_filter_reasons: bool = True
+    log_system_messages: bool = False
+    log_risk_checks: bool = False
 
 
 @dataclass
@@ -76,6 +86,11 @@ class AppSettings:
             short_window=int(os.getenv("SHORT_WINDOW", "5")),
             long_window=int(os.getenv("LONG_WINDOW", "20")),
             default_order_qty=float(os.getenv("DEFAULT_ORDER_QTY", "1000")),
+            enable_rsi_filter=os.getenv("ENABLE_RSI_FILTER", "true").lower() == "true",
+            rsi_period=int(os.getenv("RSI_PERIOD", "14")),
+            rsi_buy_max=float(os.getenv("RSI_BUY_MAX", "65")),
+            enable_ma_gap_filter=os.getenv("ENABLE_MA_GAP_FILTER", "true").lower() == "true",
+            min_ma_gap_pct=float(os.getenv("MIN_MA_GAP_PCT", "0.00005")),
         )
 
         risk = RiskSettings(
@@ -86,6 +101,11 @@ class AppSettings:
 
         logging = LoggingSettings(
             log_file=os.getenv("LOG_FILE", "logs/trading_log.csv"),
+            print_ticks=os.getenv("PRINT_TICKS", "false").lower() == "true",
+            log_ticks=os.getenv("LOG_TICKS", "false").lower() == "true",
+            print_filter_reasons=os.getenv("PRINT_FILTER_REASONS", "true").lower() == "true",
+            log_system_messages=os.getenv("LOG_SYSTEM_MESSAGES", "false").lower() == "true",
+            log_risk_checks=os.getenv("LOG_RISK_CHECKS", "false").lower() == "true",
         )
 
         return cls(
