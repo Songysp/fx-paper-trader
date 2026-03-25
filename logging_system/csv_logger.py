@@ -13,9 +13,16 @@ from models.state import Bar, ExecutionReport, OrderStatusEvent, PositionState
 class CSVTradeLogger:
     """Write trading events into a CSV file."""
 
-    def __init__(self, log_file: str) -> None:
+    def __init__(
+        self,
+        log_file: str,
+        log_system_messages: bool = False,
+        log_risk_checks: bool = False,
+    ) -> None:
         """Create the logs directory and CSV file if they do not exist."""
         self.log_path = Path(log_file)
+        self.log_system_messages = log_system_messages
+        self.log_risk_checks = log_risk_checks
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialize_file()
 
@@ -70,6 +77,8 @@ class CSVTradeLogger:
 
     def log_system(self, message: str) -> None:
         """Log a system message."""
+        if not self.log_system_messages:
+            return
         self.log_row(event_type="SYSTEM", message=message)
 
     def log_error(self, message: str) -> None:
@@ -163,6 +172,8 @@ class CSVTradeLogger:
 
     def log_risk_check(self, status: str, latest_price: float, daily_realized_pnl: float) -> None:
         """Log the result of a risk check."""
+        if not self.log_risk_checks:
+            return
         self.log_row(
             event_type="RISK",
             price=latest_price,
