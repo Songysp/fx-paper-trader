@@ -16,6 +16,14 @@ IBKR(Interactive Brokers) FX paper trading example project입니다.
 - CSV 로그 저장
 - `.env` 기반 설정 관리
 
+
+## Recent Improvements
+
+- safer pending_order release
+- no trading decision on shutdown flush
+- CSV header safety
+- weighted-average entry price for partial fills
+
 ## 폴더 구조
 
 ```text
