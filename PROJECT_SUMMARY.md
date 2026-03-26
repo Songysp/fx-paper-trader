@@ -1,65 +1,66 @@
-# Project Summary
+# 프로젝트 요약
 
-## One-Line Summary
+## 한 줄 소개
 
-Built an IBKR FX paper trading system in Python with live market data handling, strategy filters, execution state management, and historical backtesting/reporting.
+IBKR API를 이용해 실시간 FX 데이터를 수신하고, 1분봉 집계, 전략 신호 생성,
+리스크 관리, 체결 기반 포지션 업데이트, 백테스트와 결과 비교까지 포함한
+Python 기반 FX paper trading 시스템입니다.
 
-## Problem
+## 문제점
 
-The original project was a single-file script that mixed:
+초기 버전은 하나의 파일 안에 다음 로직이 모두 섞여 있었습니다.
 
-- broker callbacks
-- strategy logic
-- position updates
-- risk checks
-- logging
+- 브로커 콜백 처리
+- 전략 로직
+- 포지션 상태 변경
+- 리스크 확인
+- 로그 기록
 
-That structure made testing, maintenance, and strategy iteration difficult.
+이 구조는 유지보수와 테스트가 어렵고, 전략을 확장하기도 불편했습니다.
 
-## Solution
+## 해결 방식
 
-Refactored the project into separate modules for:
+프로젝트를 역할별로 분리했습니다.
 
-- broker integration
-- tick / bar data handling
-- strategy logic
-- risk management
-- execution / position updates
-- logging
-- shared models
-- tests
-- backtests
+- 브로커 연동
+- tick / 1분봉 처리
+- 전략 로직
+- 리스크 관리
+- 주문 / 체결 기반 상태 업데이트
+- 로깅
+- 공통 모델
+- 테스트
+- 백테스트
 
-## Technical Highlights
+## 기술 포인트
 
-- Integrated with IBKR paper trading API
-- Processed live tick data and aggregated it into 1-minute OHLC bars
-- Implemented MA crossover strategy with RSI and MA-gap filters
-- Ensured position changes occur only after execution fills
-- Separated `orderStatus` and `execDetails`
-- Added stop loss, take profit, and daily loss limit
-- Added CSV logging with configurable noise control
-- Added historical CSV backtesting
-- Added strategy comparison reports
+- IBKR paper trading API 연동
+- 실시간 tick 수신 및 1분봉 OHLC 집계
+- MA crossover 전략 구현
+- RSI / MA gap 필터 추가
+- `orderStatus` 와 `execDetails` 분리
+- 체결 이후에만 포지션 상태 반영
+- stop loss / take profit / max daily loss 적용
+- CSV 로깅과 로그 노이즈 제어
+- CSV 기반 백테스트
+- 전략 비교 리포트 생성
 
-## Why It Matters
+## 왜 의미가 있는가
 
-This project shows more than "I can write Python code."
+이 프로젝트는 단순히 Python 코드를 작성한 것이 아니라, 아래 역량을 함께 보여줍니다.
 
-It shows:
+- 시스템 설계
+- 외부 API 연동
+- 비동기 이벤트 처리 이해
+- 트레이딩 도메인 이해
+- 테스트와 검증 흐름
+- 실험 결과를 문서로 정리하는 능력
 
-- system design
-- asynchronous event handling
-- external API integration
-- trading domain awareness
-- testing discipline
-- experiment-driven iteration
+## 발표 흐름 추천
 
-## Suggested Demo Flow
-
-1. Show the live trading structure in `main.py`
-2. Show position updates happen only after `execDetails`
-3. Show the RSI / MA-gap filter logic
-4. Run the backtest
-5. Open the comparison report
-6. Explain what changed between `MA Only` and `MA + Filters`
+1. `main.py`에서 전체 실행 흐름 설명
+2. 체결 이후에만 포지션이 바뀌는 구조 설명
+3. RSI / MA gap 필터가 왜 필요한지 설명
+4. 백테스트 실행
+5. 비교 리포트와 차트 확인
+6. 기본 전략 대비 필터 전략의 차이 설명

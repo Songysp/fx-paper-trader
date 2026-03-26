@@ -1,70 +1,79 @@
-# Case Study
+# 케이스 스터디
 
-## Overview
+## 개요
 
-This project started as a single-file Interactive Brokers FX paper trading
-script. The goal of the refactor was to turn that prototype into a maintainable
-and explainable system that can be shown as a portfolio project.
+이 프로젝트는 원래 하나의 Python 파일에 작성된 FX paper trading 스크립트에서
+출발했습니다. 목표는 단순히 "동작하는 코드"를 넘어서, 유지보수 가능하고 설명
+가능하며 포트폴리오로 보여줄 수 있는 구조로 바꾸는 것이었습니다.
 
-## Problem
+## 기존 문제
 
-The original script mixed too many responsibilities in one file:
+초기 스크립트는 다음 책임이 모두 한 파일에 섞여 있었습니다.
 
-- broker callbacks
-- signal generation
-- risk checks
-- order state
-- position updates
-- logging
+- 브로커 콜백 처리
+- 매수 / 매도 신호 계산
+- 리스크 확인
+- 주문 상태 관리
+- 포지션 상태 반영
+- CSV 로깅
 
-That made the code harder to maintain, extend, and explain.
+이 구조는 아래와 같은 문제를 만들었습니다.
 
-## Solution
+- 기능 수정 시 영향 범위를 파악하기 어려움
+- 전략 추가가 불편함
+- 테스트 작성이 어려움
+- 초보자가 코드를 이해하기 힘듦
+- 프로젝트를 포트폴리오로 설명하기 어려움
 
-The project was reorganized into focused modules:
+## 해결 방식
 
-- `brokers/` for IBKR connectivity and callbacks
-- `data/` for ticks and bar aggregation
-- `strategies/` for signal generation
-- `risk/` for stop loss, take profit, and daily loss controls
-- `execution/` for order creation and fill-based position updates
-- `logging_system/` for CSV logs
-- `backtests/` for historical evaluation
+프로젝트를 역할별로 재구성했습니다.
 
-## Key Decisions
+- `brokers/`: IBKR 연결과 콜백 처리
+- `data/`: tick 저장과 1분봉 집계
+- `strategies/`: 전략 신호 계산
+- `risk/`: stop loss, take profit, daily loss limit
+- `execution/`: 주문 객체 생성, 체결 기준 상태 반영
+- `logging_system/`: CSV 로그 기록
+- `backtests/`: 과거 데이터 검증
 
-### Fill-based state updates
+## 핵심 설계 결정
 
-Position state is not changed when an order is submitted. It changes only when
-an execution callback is received. That keeps live behavior closer to real
-broker behavior and avoids false assumptions.
+### 1. 체결 기준 포지션 업데이트
 
-### Strategy isolation
+주문을 전송했다고 포지션을 바로 바꾸지 않고, 실제 `execDetails` 체결 이벤트가
+도착했을 때만 포지션 상태를 변경하도록 했습니다. 이 부분은 자동매매 시스템의
+정확성과 직결되는 핵심 포인트입니다.
 
-The strategy module only depends on close prices and position state. It does
-not know about IBKR request IDs, contracts, or callbacks.
+### 2. 전략과 브로커 구현 분리
 
-### Risk before entry
+전략 모듈은 가격 데이터와 포지션 상태만 알고, IBKR의 request id나 callback
+세부 사항은 알지 않도록 분리했습니다. 덕분에 RSI, breakout, volatility filter
+같은 새 전략을 추가하기 쉬운 구조가 되었습니다.
 
-On each completed bar, risk logic runs before new strategy entries are allowed.
+### 3. 전략보다 먼저 리스크 확인
 
-### Experimentation workflow
+새 1분봉이 완성될 때마다 먼저 stop loss, take profit, daily loss limit을
+확인하고, 그 다음에 진입 신호를 계산하도록 했습니다.
 
-The repository does not stop at live execution. It also includes backtesting,
-comparison reports, and chart generation so the strategy can be discussed with
-evidence.
+### 4. 구현에서 끝나지 않는 검증 흐름
 
-## What Improved
+실시간 paper trading 코드만 두는 대신, CSV 기반 백테스트와 전략 비교 리포트를
+추가했습니다. 덕분에 "전략을 구현했다"를 넘어서 "전략을 검증했다"까지 보여줄 수
+있게 되었습니다.
 
-- readability for beginners
-- ability to add new strategies or filters
-- easier testing of core logic
-- clearer portfolio narrative
+## 개선된 점
 
-## Presentation Angle
+- 초보자도 읽기 쉬운 구조
+- 기능별 책임 분리
+- 테스트 작성 용이성 증가
+- 전략 확장성 확보
+- 포트폴리오 설명력 향상
 
-This project is strongest when presented as:
+## 포트폴리오에서 어떻게 설명하면 좋은가
 
-1. a broker-integrated event-driven system
-2. a refactoring and system design project
-3. a trading strategy validation workflow
+이 프로젝트는 아래 관점으로 설명할 때 가장 강합니다.
+
+1. 브로커 API와 연결된 이벤트 기반 트레이딩 시스템
+2. 단일 파일을 모듈 구조로 리팩토링한 설계 프로젝트
+3. 전략 구현과 백테스트 검증까지 포함한 실험 프로젝트
