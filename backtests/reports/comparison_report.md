@@ -16,5 +16,5 @@
 
 ## Generated Reports
 
-- MA Only: `C:\Users\song\Documents\New project\fx-paper-trader\backtests\reports\ma_only_report.md`
-- MA + Filters: `C:\Users\song\Documents\New project\fx-paper-trader\backtests\reports\filtered_report.md`
+- MA Only: `C:\Users\song\Documents\fx-paper-trader\backtests\reports\ma_only_report.md`
+- MA + Filters: `C:\Users\song\Documents\fx-paper-trader\backtests\reports\filtered_report.md`
