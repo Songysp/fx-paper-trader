@@ -1,19 +1,19 @@
-# Resume Bullets
+# 이력서용 문구
 
-## Short Version
+## 짧은 버전
 
-- Built a modular FX paper trading system in Python using the IBKR API, with live tick ingestion, 1-minute bar aggregation, strategy execution, and risk controls.
-- Refactored a single-file trading script into a maintainable project structure with separated broker, strategy, execution, logging, and state-management modules.
-- Added historical backtesting and strategy comparison reporting to evaluate a baseline MA crossover strategy against filtered variants.
+- IBKR API를 사용해 실시간 FX tick 수신, 1분봉 집계, 전략 실행, 리스크 제어를 포함한 Python 기반 paper trading 시스템을 구현했습니다.
+- 단일 파일 자동매매 스크립트를 브로커, 전략, 실행, 로깅, 상태 관리 모듈로 분리해 유지보수성과 확장성을 높였습니다.
+- 백테스트와 전략 비교 리포트를 추가해 기본 MA 전략과 필터 전략을 검증할 수 있는 구조를 만들었습니다.
 
-## Stronger Technical Version
+## 기술 강조 버전
 
-- Designed and implemented an event-driven FX paper trading application in Python on top of the IBKR API, including market data handling, order state tracking, fill-based position updates, and risk management.
-- Improved maintainability by decomposing a monolithic trading script into focused modules for broker integration, bar aggregation, trading strategy logic, execution, portfolio state, and logging.
-- Added experimental validation tooling by building CSV-based backtesting, trade-level performance metrics, and comparison reports for `MA Only` versus `MA + Filters` strategy variants.
+- IBKR API 기반 이벤트 드리븐 FX paper trading 애플리케이션을 설계 및 구현했으며, 실시간 시장 데이터 처리, 주문 상태 추적, 체결 기반 포지션 업데이트, 리스크 관리 로직을 포함했습니다.
+- 단일 파일로 작성된 자동매매 스크립트를 브로커 연동, 1분봉 집계, 전략 로직, 실행, 상태 관리, 로깅으로 분리해 구조적 유지보수성을 개선했습니다.
+- CSV 기반 백테스트 엔진, 거래 단위 성과 지표, `MA Only` 대비 `MA + Filters` 전략 비교 리포트를 추가해 실험과 검증 흐름을 구축했습니다.
 
-## Interview-Friendly Version
+## 면접용 설명 버전
 
-- Built a Python trading system that connects to IBKR, receives live FX ticks, converts them into 1-minute bars, and executes a rules-based strategy with risk protection.
-- Added strategy filters and backtesting tools to compare signal quality and drawdown between baseline and filtered trading rules.
-- Focused on correctness in execution flow by ensuring positions update only after real fills, not simply after order submission.
+- IBKR에 연결해 실시간 FX tick을 받아 1분봉으로 집계하고, 규칙 기반 전략과 리스크 관리로 매매를 수행하는 Python 시스템을 만들었습니다.
+- 주문을 보냈다고 바로 포지션을 바꾸지 않고, 실제 체결 이벤트 이후에만 상태를 반영하도록 설계해 실행 흐름의 정확성을 높였습니다.
+- 기본 MA 전략에 RSI와 MA 간격 필터를 추가하고, 백테스트와 비교 리포트로 신호 품질과 drawdown 차이를 확인할 수 있게 만들었습니다.
