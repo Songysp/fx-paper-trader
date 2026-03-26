@@ -11,8 +11,7 @@
 
 - `MA Only` is the plain moving-average crossover baseline.
 - `MA + Filters` adds the RSI filter and MA-gap filter.
-- In this sample dataset, the filtered version produced a smaller loss and a smaller drawdown.
-- This does not prove the filtered strategy is always better, but it demonstrates a clean experiment-and-compare workflow.
+- The comparison shows how simple filters can affect trade quality, net PnL, and drawdown.
 
 ## Generated Reports
 

@@ -1,8 +1,10 @@
 # FX Paper Trader
 
-IBKR(Interactive Brokers) FX paper trading project built for learning, experimentation, and portfolio presentation.
+IBKR(Interactive Brokers) FX paper trading project built for learning,
+experimentation, and portfolio presentation.
 
-This project started from a single-file trading script and was refactored into a beginner-friendly structure with:
+This project started from a single-file trading script and was refactored into
+a beginner-friendly structure with:
 
 - broker integration
 - live tick processing
@@ -28,6 +30,14 @@ This repository is useful as a portfolio project because it demonstrates:
 - validating ideas with backtests instead of only writing live-trading code
 - generating readable reports from experiments
 
+## Portfolio Docs
+
+- [PROJECT_SUMMARY.md](C:/Users/song/Documents/fx-paper-trader/PROJECT_SUMMARY.md)
+- [RESUME_BULLETS.md](C:/Users/song/Documents/fx-paper-trader/RESUME_BULLETS.md)
+- [CASE_STUDY.md](C:/Users/song/Documents/fx-paper-trader/CASE_STUDY.md)
+- [ARCHITECTURE.md](C:/Users/song/Documents/fx-paper-trader/ARCHITECTURE.md)
+- [RESULTS.md](C:/Users/song/Documents/fx-paper-trader/RESULTS.md)
+
 ## Project Structure
 
 ```text
@@ -35,6 +45,9 @@ fx-paper-trader/
 ├─ README.md
 ├─ PROJECT_SUMMARY.md
 ├─ RESUME_BULLETS.md
+├─ CASE_STUDY.md
+├─ ARCHITECTURE.md
+├─ RESULTS.md
 ├─ requirements.txt
 ├─ .env.example
 ├─ main.py
@@ -50,6 +63,7 @@ fx-paper-trader/
 ├─ historical_data/
 ├─ backtests/
 ├─ tests/
+├─ legacy/
 └─ logs/
 ```
 
@@ -219,6 +233,16 @@ Generated reports:
 - [comparison_report.md](C:/Users/song/Documents/fx-paper-trader/backtests/reports/comparison_report.md)
 - [ma_only_report.md](C:/Users/song/Documents/fx-paper-trader/backtests/reports/ma_only_report.md)
 - [filtered_report.md](C:/Users/song/Documents/fx-paper-trader/backtests/reports/filtered_report.md)
+
+Generate the portfolio chart:
+
+```powershell
+python -m backtests.chart_generator
+```
+
+Generated chart:
+
+- [comparison_chart.svg](C:/Users/song/Documents/fx-paper-trader/backtests/reports/comparison_chart.svg)
 
 ## Tests
 
