@@ -206,7 +206,7 @@ python -m backtests.run_backtest
 
 Generated report:
 
-- [latest_report.md](C:/Users/song/Documents/New project/fx-paper-trader/backtests/reports/latest_report.md)
+- [latest_report.md](C:/Users/song/Documents/fx-paper-trader/backtests/reports/latest_report.md)
 
 Run strategy comparison:
 
@@ -216,9 +216,9 @@ python -m backtests.compare_strategies
 
 Generated reports:
 
-- [comparison_report.md](C:/Users/song/Documents/New project/fx-paper-trader/backtests/reports/comparison_report.md)
-- [ma_only_report.md](C:/Users/song/Documents/New project/fx-paper-trader/backtests/reports/ma_only_report.md)
-- [filtered_report.md](C:/Users/song/Documents/New project/fx-paper-trader/backtests/reports/filtered_report.md)
+- [comparison_report.md](C:/Users/song/Documents/fx-paper-trader/backtests/reports/comparison_report.md)
+- [ma_only_report.md](C:/Users/song/Documents/fx-paper-trader/backtests/reports/ma_only_report.md)
+- [filtered_report.md](C:/Users/song/Documents/fx-paper-trader/backtests/reports/filtered_report.md)
 
 ## Tests
 
